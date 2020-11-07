@@ -5,71 +5,69 @@ import json
 import requests
 import re
 
-# owner = "intel"
-# repo = "compute-runtime"
+#repo_owner = "intel"
+# repo_name = "compute-runtime"
 # owner = "snimrod"
 # repo = "TestForComments"
-owner = "v3io"
-# repo = "frames"
-repo = "storey"
-pr = ""
+repo_owner = "v3io"
+repo_name = "frames"
+# repo_name = "storey"
+pr_num = ""
 # dtype = "reviews"
 dtype = "comments"
 pageLines = 100
+UPREF = "https://api.github.com/repos/"
+FAIL = - 1
 
 
-def handle_page(owner, repo, pr, dtype, page):
-    if len(pr) > 0:
-        pr = "{pull}/".format(pull = pr)
-
-    URL = "https://api.github.com/repos/{own}/{rep}/pulls/{pull}{type}?page={p}&per_page={pl}".format(own = owner, rep = repo, pull = pr, type = dtype, p = page, pl = pageLines)
-    print(URL)
+def handle_page(owner, repo, pr, page):
+    URL = "{pre}{own}/{rep}/pulls/{pull}comments?page={p}&per_page={pl}".format(pre=UPREF, own=owner, rep=repo,
+                                                                                pull=pr, p=page, pl=pageLines)
     r = requests.get(url = URL)
+    if r.status_code != 200:
+        print("Page {n} failed! (code={c}) (url={u}) (error={er})".format(n=page, c=r.status_code, u=URL, er=r.reason))
+        return FAIL
 
-    print(r.status_code)
     cnt = len(r.json())
-    print (cnt)
+    if cnt == 0:
+        return cnt
 
-    for i in range(cnt):
-        body = re.sub(r"[^' '-}'\n']+", ' ', r.json()[i]['body'].replace(","," "))
+    for p_num in range(cnt):
+        body = re.sub(r"[^' '-}'\n']+", ' ', r.json()[p_num]['body'].replace(",", " "))
         body = re.sub("\n|\r", " ", body)
-        user = r.json()[i]['user']['login']
-        str = '{idx},{who},{what}'.format(idx=((page - 1) * pageLines) + i + 1, who=user, what=body)
+        user = r.json()[p_num]['user']['login']
+        str = '{idx},{who},{what}'.format(idx=((page - 1) * pageLines) + p_num + 1, who=user, what=body)
         output.write(str + '\n')
+
+    print("Page {n} - Done".format(n=page))
     return cnt
 
-# api-endpoint
-# URL = "https://api.github.com/repos/{own}/{rep}/pulls/{pull}{type}
-# ?page={p}&per_page=100".format(own = owner, rep = repo, pull = pr, type = dtype, p = page)
-# URL = "https://api.github.com/repos/v3io/frames/pulls/comments?page=5&per_page=110"
-# URL = "https://api.github.com/repos/intel/compute-runtime/pulls/239/comments?page=1&per_page=100"
-# URL = "https://api.github.com/repos/intel/compute-runtime/pulls/239/reviews?page=1&per_page=100"
-# URL = "https://api.github.com/repos/intel/compute-runtime/pulls/256/comments"
-# URL = "https://api.github.com/repos/intel/compute-runtime/comments"
-# URL = "https://api.github.com/repos/intel/compute-runtime/issues/comments"
 
-# URL = "https://api.github.com/repos/Mellanox/ucx/pulls/comments"
-# URL = "https://api.github.com/repos/snimrod/TestForComments/pulls/reviews"
-# URL = "https://api.github.com/repos/intel/compute-runtime/pulls/256/reviews"
-# sending get request and saving the response as response object
+def handle_repo(owner, repo, pr):
 
+    if len(pr) > 0:
+        pr = "{pull}/".format(pull=pr)
 
+    print("Retrieving data for {o}/{r}...".format(o=owner, r=repo))
+    page = 1
+    cnt = handle_page(owner, repo, pr, page)
+    total_cnt = cnt
+    while cnt > 0:
+        page = page + 1
+        cnt = handle_page(owner, repo, pr, page)
+        total_cnt += cnt
+
+    if cnt == 0:
+        print("Retrieved {c} comments in {p} pages".format(c=total_cnt, p=(page-1)))
+    else:
+        print("Stopped due to failure on page {p}".format(p=page))
+
+# def main():
+# fname = "{own}_{rep}.json".format(rep=repo, own=owner)
 output = open("output.csv", "w")
-
-i = 1
-while handle_page(owner, repo, pr, dtype, i) > 0:
-    i = i + 1
-
+handle_repo(repo_owner, repo_name, pr_num)
 output.close()
 
-# print(r.content)
 
-# extracting data in json format
-# data = r.json()
-
-# fname = "{own}_{rep}.json".format(rep=repo, own=owner)
-
-# with open(fname, 'w') as f:
-#        json.dump(data, f)
-
-# print(data)
+#if __name__ == "__main__":
+#    main()
