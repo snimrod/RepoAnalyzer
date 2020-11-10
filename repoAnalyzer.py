@@ -22,7 +22,7 @@ USER = os.environ.get('MYUSER')
 PASS = os.environ.get('MYPASS')
 
 
-def retrieve_page(owner, repo, page, issues):
+def retrieve_page(owner, repo, page, f, issues):
     if issues:
         req_url = "{pre}{own}/{rep}/issues/comments?page={p}&per_page={pl}".format(pre=UPREF, own=owner, rep=repo,
                                                                                p=page, pl=pageLines)
@@ -32,9 +32,8 @@ def retrieve_page(owner, repo, page, issues):
     r = requests.get(url=req_url, auth=(USER, PASS))
 
     if r.status_code == 403:
-        print("Got rate limit error, sleeping and retrying")
-        time.sleep(1.1)
-        r = requests.get(url=req_url, auth=(USER, PASS))
+        print("Got rate limit error on {o}/{r} - page {p}".format(o=owner, r=repo, p=page))
+        return 0
 
     if r.status_code != 200:
         print("Page {n} failed! (code={c}) (url={u}) (error={er})".format(n=page, c=r.status_code, u=req_erl,
@@ -50,19 +49,19 @@ def retrieve_page(owner, repo, page, issues):
         body = re.sub("\n|\r", " ", body)
         user = r.json()[p_num]['user']['login']
         str = '{idx},{who},{what}'.format(idx=((page - 1) * pageLines) + p_num + 1, who=user, what=body)
-        output.write(str + '\n')
+        f.write(str + '\n')
 
     print("Page {n} - Done".format(n=page))
     return cnt
 
 
-def retrieve_all_pages(owner, repo, issues):
+def retrieve_all_pages(owner, repo, f, issues):
     page = 1
-    cnt = retrieve_page(owner, repo, page, issues)
+    cnt = retrieve_page(owner, repo, page, f, issues)
     total_cnt = cnt
     while cnt > 0:
         page = page + 1
-        cnt = retrieve_page(owner, repo, page, issues)
+        cnt = retrieve_page(owner, repo, page, f, issues)
         total_cnt += cnt
 
     if cnt == 0:
@@ -73,11 +72,11 @@ def retrieve_all_pages(owner, repo, issues):
     return total_cnt
 
 
-def retrieve_repo(owner, repo):
+def retrieve_repo(owner, repo, f):
     print("Retrieving pulls comments for {o}/{r}...".format(o=owner, r=repo))
-    comments = retrieve_all_pages(owner, repo, 0)
+    comments = retrieve_all_pages(owner, repo, f, 0)
     print("Retrieving issues comments for {o}/{r}...".format(o=owner, r=repo))
-    comments += retrieve_all_pages(owner, repo, 1)
+    comments += retrieve_all_pages(owner, repo, f, 1)
     print("Retrieved total of {n} comments for {o}/{r}".format(o=owner, r=repo, n=comments))
 
 
@@ -103,11 +102,15 @@ def get_owner_repos_list(owner):
 
 
 def retrieve_owner(owner):
+    f = open("{o}.csv".format(o=owner), "w")
+    f.write("{o}\n".format(o=owner))
     repos = get_owner_repos_list(owner)
     print(len(repos))
     print(repos)
-    if "compute-runtime" in repos:
-        print("Found it!")
+    # for repo in repos:
+    #    retrieve_repo(owner, repo, f)
+    retrieve_repo(owner, 'nvmx', f)
+    f.close()
 
 
 def req_test(req_url):
@@ -122,8 +125,8 @@ def req_test(req_url):
 # output = open("output.csv", "w")
 # retrieve_repo(repo_owner, repo_name)
 # output.close()
-req_test("https://api.github.com/orgs/intel/repos")
-# retrieve_owner("intel")
+# req_test("https://api.github.com/orgs/intel/repos")
+retrieve_owner("Mellanox")
 # print(USER, PASS)
 
 # if __name__ == "__main__":
