@@ -11,6 +11,27 @@ def all_same_char(s):
     return True
 
 
+def all_qe_marks(s):
+    n = len(s)
+    for i in range(1, n):
+        if s[i] != '?' and s[i] != '!':
+            return False
+
+    return True
+
+
+def one_word_question(txt, words):
+    if txt.startswith('why') or txt.startswith('what') or txt.startswith('where'):
+        if len(words) == 1:
+            return True
+        elif len(words) == 2:
+            return all_qe_marks(words[1])
+        else:
+            return False
+    else:
+        return False
+
+
 def customized_pos(txt):
     if txt.startswith('right'):
         return True
@@ -19,6 +40,8 @@ def customized_pos(txt):
 
 
 def customized_neg(txt):
+    words = txt.split()
+
     if ('don\'t do' in txt) and not('please don\'t do' in txt) and not('we don\'t do' in txt)\
             and not('i don\'t do' in txt):
         return True
@@ -27,7 +50,8 @@ def customized_neg(txt):
         return True
     if all_same_char(txt):
         return True
-    if (len(txt) < 10) and txt.endswith('?'):
+    #if (len(txt) < 10) and txt.endswith('?'):
+    if one_word_question(txt, words):
         return True
     if txt.startswith('don\'t') and not(txt.startswith('don\'t you')) and not(txt.startswith('don\'t we')):
         return True
@@ -57,8 +81,7 @@ def analyze_csv(f):
     # cheap poitives: 'pls', 'plz', 'please'
 
         negatives = ['ugly', 'stupid', 'very bad', 'you shouldn\'t', '.don\'t', ',don\'t', '.do not', ',do not', '??',
-                     '???', 'can you make the code more readable', '. don\'t', ', don\'t', '. do not', ', do not',
-                     'you must make the code readable']
+                     '???', '. don\'t', ', don\'t', '. do not', ', do not', 'readable']
 
         fieldnames = ['line', 'user', 'body']
         reader = csv.DictReader(csvfile, fieldnames=fieldnames)
@@ -105,7 +128,8 @@ def analyze_csv(f):
         neg_l.reverse()
         for key in neg_l:
             if engs[key].comments_cnt() > 50:
-                txt = "{id}) {u}: {n:.2f} ({l})".format(id=i, u=key, n=100*engs[key].neg_rate(), l=engs[key].comments)
+                txt = "{id}) {u}: {n:.2f} ({nc}/{l})".format(id=i, u=key, n=100*engs[key].neg_rate(),
+                                                             nc=engs[key].neg_cnt(), l=engs[key].comments)
                 print(txt)
                 af.write("{s}\n".format(s=txt))
                 i += 1
@@ -118,7 +142,8 @@ def analyze_csv(f):
         pos_l.reverse()
         for key in pos_l:
             if engs[key].comments_cnt() > 50:
-                txt = "{id}) {u}: {n:.2f} ({l})".format(id=i, u=key, n=100 * engs[key].pos_rate(), l=engs[key].comments)
+                txt = "{id}) {u}: {n:.2f} ({p}/{l})".format(id=i, u=key, n=100 * engs[key].pos_rate(),
+                                                            p=engs[key].pos_cnt(), l=engs[key].comments)
                 print(txt)
                 af.write("{s}\n".format(s=txt))
                 i += 1

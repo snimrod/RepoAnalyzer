@@ -6,8 +6,7 @@ import os
 import requests
 import re
 from outputStats import analyze_csv
-from engineer import Engineer
-import time
+from queryMgr import handle_query
 
 repo_owner = "intel"
 repo_name = "compute-runtime"
@@ -138,11 +137,16 @@ def req_test(req_url):
 #retrieve_repo('spdk', 'spdk')
 #analyze_csv('intel_compute-runtime.csv')
 #analyze_csv('v3io_frames.csv')
-#analyze_csv('openucx_ucx.csv')
+d = analyze_csv('openucx_ucx.csv')
 #analyze_csv('Mellanox_spdk.csv')
-d = analyze_csv('Mellanox.csv')
-#analyze_csv('linux-rdma_rdma-core.csv')
+#d = analyze_csv('Mellanox.csv')
+# d = analyze_csv('linux-rdma_rdma-core.csv')
 
+print('\nq to quit, h for help')
+cmd = input('>>> ')
+while cmd != 'q':
+    handle_query(d, cmd)
+    cmd = input('>>> ')
 
 # if __name__ == "__main__":
 #    main()
