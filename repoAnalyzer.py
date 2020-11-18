@@ -20,7 +20,6 @@ pageLines = 100
 UPREF = "https://api.github.com/repos/"
 FAIL = - 1
 USER = os.environ.get('MYUSER')
-PASS = os.environ.get('MYPASS')
 TOKEN = os.environ.get('PAT')
 
 
@@ -31,9 +30,7 @@ def retrieve_page(owner, repo, page, f, issues, start_line):
     else:
         req_url = "{pre}{own}/{rep}/pulls/comments?page={p}&per_page={pl}".format(pre=UPREF, own=owner, rep=repo,
                                                                                   p=page, pl=pageLines)
-    # r = requests.get(url=req_url)
     r = requests.get(url=req_url, auth=(USER, TOKEN))
-    # r = requests.get(url=req_url, auth=(USER, PASS))
 
     if r.status_code == 403:
         print("Got rate limit error on {o}/{r} - page {p}".format(o=owner, r=repo, p=page))
@@ -92,8 +89,6 @@ def retrieve_repo(owner, repo):
 
 def append_page_repos(owner, repos, page):
     req_url = "https://api.github.com/orgs/{o}/repos?page={p}&per_page={pp}".format(o=owner, p=page, pp=pageLines)
-    # r = requests.get(url=req_url, auth=(USER, PASS))
-    # r = requests.get(url=req_url)
     r = requests.get(url=req_url, auth=(USER, TOKEN))
     cnt = len(r.json())
     print(cnt)
@@ -124,7 +119,6 @@ def retrieve_owner(owner):
 
 
 def req_test(req_url):
-    # r = requests.get(url=req_url)
     r = requests.get(url=req_url, auth=(USER, TOKEN))
     # cnt = len(r.json())
     # print(cnt)
@@ -146,22 +140,9 @@ def req_test(req_url):
 #analyze_csv('v3io_frames.csv')
 #analyze_csv('openucx_ucx.csv')
 #analyze_csv('Mellanox_spdk.csv')
-analyze_csv('Mellanox.csv')
+d = analyze_csv('Mellanox.csv')
 #analyze_csv('linux-rdma_rdma-core.csv')
 
-l = []
-
-l.insert(0, Engineer('Shlomi'))
-
-e = l[0]
-e.inc_comments()
-e.inc_comments()
-e.inc_comments()
-e.pos_found("mmmm")
-
-z = l[0]
-
-#print("{s} with {x} and {y} {w}".format(s=z.username, x=z.pos_rate(), y=z.pos_cnt(), w=z.comments_cnt()))
 
 # if __name__ == "__main__":
 #    main()

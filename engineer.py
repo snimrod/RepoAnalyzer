@@ -1,12 +1,10 @@
 class Engineer:
-    comments = 0
-    positives = []
-    negatives = []
-    username = ""
 
     def __init__(self, un):
         self.username = un
         self.comments = 1
+        self.negatives = []
+        self.positives = []
 
     def inc_comments(self):
         self.comments += 1
@@ -37,3 +35,14 @@ class Engineer:
 
     def neg_found(self, txt):
         self.negatives.insert(len(self.negatives), txt)
+
+    def dump(self, f):
+        pref = "{u}: {c} comments, {pp:.2f}% positive ({pw}), {np:.2f}% negative ({nw})".format(u=self.username,
+                                                                                                c=self.comments,
+                                                                                                pp=100*self.pos_rate(),
+                                                                                                pw=len(self.positives),
+                                                                                                np=100*self.neg_rate(),
+                                                                                                nw=len(self.negatives))
+        print(pref)
+        f.write(pref + '\n')
+
