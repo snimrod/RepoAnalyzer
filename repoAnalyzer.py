@@ -22,6 +22,7 @@ UPREF = "https://api.github.com/repos/"
 FAIL = - 1
 USER = os.environ.get('MYUSER')
 PASS = os.environ.get('MYPASS')
+TOKEN = os.environ.get('PAT')
 
 
 def retrieve_page(owner, repo, page, f, issues, start_line):
@@ -32,7 +33,7 @@ def retrieve_page(owner, repo, page, f, issues, start_line):
         req_url = "{pre}{own}/{rep}/pulls/comments?page={p}&per_page={pl}".format(pre=UPREF, own=owner, rep=repo,
                                                                                   p=page, pl=pageLines)
     # r = requests.get(url=req_url)
-    r = requests.get(url=req_url, auth=(USER, 'd52ecc4f180092fbde89c283fc627115019d7bcb'))
+    r = requests.get(url=req_url, auth=(USER, TOKEN))
     # r = requests.get(url=req_url, auth=(USER, PASS))
 
     if r.status_code == 403:
@@ -47,6 +48,8 @@ def retrieve_page(owner, repo, page, f, issues, start_line):
     cnt = len(r.json())
     if cnt == 0:
         return cnt
+
+    print(r.json())
 
     for p_num in range(cnt):
         body = re.sub(r"[^' '-}'\n']+", ' ', r.json()[p_num]['body'].replace(",", " "))
@@ -86,14 +89,13 @@ def retrieve_repo(owner, repo):
     comments += retrieve_all_pages(owner, repo, f, 1, comments)
     print("Retrieved total of {n} comments for {o}/{r}".format(o=owner, r=repo, n=comments))
     f.close()
-    print_str_usage_histogram(fname, 'because')
 
 
 def append_page_repos(owner, repos, page):
     req_url = "https://api.github.com/orgs/{o}/repos?page={p}&per_page={pp}".format(o=owner, p=page, pp=pageLines)
     # r = requests.get(url=req_url, auth=(USER, PASS))
     # r = requests.get(url=req_url)
-    r = requests.get(url=req_url, auth=(USER, 'd52ecc4f180092fbde89c283fc627115019d7bcb'))
+    r = requests.get(url=req_url, auth=(USER, TOKEN))
     cnt = len(r.json())
     print(cnt)
     for p_num in range(cnt):
@@ -124,7 +126,7 @@ def retrieve_owner(owner):
 
 def req_test(req_url):
     # r = requests.get(url=req_url)
-    r = requests.get(url=req_url, auth=(USER, 'd52ecc4f180092fbde89c283fc627115019d7bcb'))
+    r = requests.get(url=req_url, auth=(USER, TOKEN))
     # cnt = len(r.json())
     # print(cnt)
     print(r.json())
@@ -139,22 +141,14 @@ def req_test(req_url):
 # req_test("https://api.github.com/repos/Mellanox/nvmx/pulls/comments")
 # retrieve_owner("intel")
 # retrieve_repo('intel', 'compute-runtime')
-# retrieve_repo('openucx', 'ucx')
-#analyze_csv('intel_compute-runtime.csv')
+# retrieve_repo('v3io', 'frames')
+#retrieve_repo('spdk', 'spdk')
+analyze_csv('intel_compute-runtime.csv')
+#analyze_csv('v3io_frames.csv')
 analyze_csv('openucx_ucx.csv')
-# analyze_csv('linux-rdma_rdma-core.csv')
-
-
-#d = dict()
-#d["third"] = 3
-#d["second"] = 2
-#d["first"] = 1
-
-#print(sorted(d.items(), key=lambda item: item[1]))
-
-
-
-
+#analyze_csv('Mellanox_spdk.csv')
+# analyze_csv('Mellanox.csv')
+analyze_csv('linux-rdma_rdma-core.csv')
 
 
 # if __name__ == "__main__":

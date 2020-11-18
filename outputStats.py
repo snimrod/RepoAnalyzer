@@ -51,6 +51,8 @@ def all_same_char(s):
 def customized_pos(txt):
     if txt.startswith('right'):
         return True
+    if ('because' in txt) and not('receiving this because you authored' in txt):
+        return True
 
 
 def customized_neg(txt):
@@ -83,7 +85,7 @@ def analyze_csv(f):
     af = open(newf, "w")
     af.write('User,Comments,Positive words, negative words\n')
     with open(f, newline='') as csvfile:
-        positives = ['because', 'tnx', 'thank', '10x','right?', 'right ?', 'imo', 'imho', 'i think', 'maybe',
+        positives = ['tnx', 'thank', '10x', 'right?', 'right ?', 'imo', 'imho', 'i think', 'maybe',
                      'consider', 'you are right', 'you\'re right', ' correct ', ':)', ';)', 'nice catch', 'afaik',
                      'afaiu', 'can you', '(;', '(:', '):', ':(', ':-)', ';-)', ':-(', '(-:', '(-;', 'great job',
                      'well done', 'amazing job', 'nicely done', 'it\'s a good idea', 'it is a good idea',
@@ -99,8 +101,6 @@ def analyze_csv(f):
         reader = csv.DictReader(csvfile, fieldnames=fieldnames)
         pos_words = dict()
         neg_words = dict()
-        #pos_lines = dict()
-        #neg_lines = dict()
         lines = dict()
         lengths = dict()
 
@@ -119,32 +119,26 @@ def analyze_csv(f):
                 lengths[user] = len(body)
 
             # check pos words
-            # found_pos = False
             for pos in positives:
                 if pos in body:
-                    # found_pos = True
+                    # if user == 'vasilyMellanox':
+                    #     af.write("{x},{y}\n".format(x=user, y=body))
                     if user in pos_words.keys():
                         pos_words[user] += 1
                     else:
                         pos_words[user] = 1
             if customized_pos(body):
+                # if user == 'vasilyMellanox':
+                # af.write("{x},{y}\n".format(x=user, y=body))
                 if user in pos_words.keys():
                     pos_words[user] += 1
                 else:
                     pos_words[user] = 1
 
-#            if found_pos:
-#                if user in pos_lines:
-#                    pos_lines[user] += 1
-#                else:
-#                    pos_lines[user] = 1
-
             # check neg words
-            #found_neg = False
             for neg in negatives:
                 if neg in body:
                     # print(user, body)
-                    #found_neg = True
                     if user in neg_words.keys():
                         neg_words[user] += 1
                     else:
@@ -157,44 +151,50 @@ def analyze_csv(f):
                 else:
                     neg_words[user] = 1
 
-#            if found_neg:
-#                if user in neg_lines:
-#                    neg_lines[user] += 1
-#                else:
-#                    neg_lines[user] = 1
-
         # dump summary
         neg_d = dict()
         pos_d = dict()
         for u_id in lines.keys():
-            if (lines[u_id] > 50) and (d_val(neg_words, u_id) > 0):
-                neg_d[u_id] = d_val(neg_words, u_id)/lines[u_id]
+            # if (lines[u_id] > 50) and (d_val(neg_words, u_id) > 0):
+            if lines[u_id] > 50:
+                neg_d[u_id] = 100*d_val(neg_words, u_id)/lines[u_id]
 
-            if (lines[u_id] > 50) and (d_val(pos_words, u_id) > 0):
-                pos_d[u_id] = d_val(pos_words, u_id)/lines[u_id]
+            # if (lines[u_id] > 50) and (d_val(pos_words, u_id) > 0):
+            if lines[u_id] > 50:
+                pos_d[u_id] = 100*d_val(pos_words, u_id)/lines[u_id]
 
-            pref = "{u},{c},{p_w},{p_p},{n_w},{n_p},{a_l}".format(u=u_id, c=lines[u_id], p_w=d_val(pos_words, u_id),
-                                                                  p_p=round(100*d_val(pos_words, u_id)/lines[u_id]),
-                                                                  n_w=d_val(neg_words, u_id),
-                                                                  n_p=round(100*d_val(neg_words, u_id)/lines[u_id]),
-                                                                  a_l=int(lengths[u_id]/lines[u_id]))
+            # print(d_val(pos_d, u_id))
+            pref = "{u},{c},{p_w},{p_p:.2f},{n_w},{n_p:.2f},{a_l}".format(u=u_id, c=lines[u_id],
+                                                                          p_w=d_val(pos_words, u_id),
+                                                                          p_p=d_val(pos_d, u_id),
+                                                                          n_w=d_val(neg_words, u_id),
+                                                                          n_p=d_val(neg_d, u_id),
+                                                                          a_l=int(lengths[u_id]/lines[u_id]))
             print(pref)
             af.write(pref+'\n')
 
         neg_l = sorted(neg_d.items(), key=lambda item: item[1])
         neg_l.reverse()
-        af.write("\nEngineers with most negative ratio\n")
+        header = "\nHighest negative ratio"
+        print(header)
+        af.write("{s}\n".format(s=header))
         i = 1
         for eng in neg_l:
-            af.write("{id}) {u} - {n} ({l})\n".format(id=i, u=eng[0], n=round(100*eng[1]), l=lines[eng[0]]))
+            txt = "{id}) {u} - {n:.2f} ({l})".format(id=i, u=eng[0], n=eng[1], l=lines[eng[0]])
+            print(txt)
+            af.write("{s}\n".format(s=txt))
             i += 1
 
         pos_l = sorted(pos_d.items(), key=lambda item: item[1])
         pos_l.reverse()
-        af.write("\nEngineers with most positive ratio\n")
+        header = "\nHighest positive ratio"
+        print(header)
+        af.write("{s}\n".format(s=header))
         i = 1
         for eng in pos_l:
-            af.write("{id}) {u} - {n} ({l})\n".format(id=i, u=eng[0], n=round(100*eng[1]), l=lines[eng[0]]))
+            txt = "{id}) {u} - {n:.2f} ({l})".format(id=i, u=eng[0], n=eng[1], l=lines[eng[0]])
+            print(txt)
+            af.write("{s}\n".format(s=txt))
             i += 1
 
         af.close()
