@@ -2,36 +2,6 @@ import csv
 from engineer import Engineer
 
 
-def print_str_usage_histogram(f, word):
-    with open(f, newline='') as csvfile:
-        fieldnames = ['line', 'user', 'body']
-        reader = csv.DictReader(csvfile, fieldnames=fieldnames)
-        d = dict()
-        lines = dict()
-        # row_count = sum(1 for row in reader)  # fileObject is your csv.reader
-        for row in reader:
-            # +1 to user lines
-            if row['user'] in lines.keys():
-                lines[row['user']] += 1
-            else:
-                lines[row['user']] = 1
-
-            # +1 to user usage of this word
-            if word in row['body'].lower():
-                if row['user'] in d.keys():
-                    d[row['user']] += 1
-                else:
-                    d[row['user']] = 1
-
-        for k in lines.keys():
-            if k in d.keys():
-                d_cnt = d[k]
-            else:
-                d_cnt = 0
-            pref = "{n} {c} {l} ".format(n=k, c=d_cnt, l=lines[k])
-            print(pref + "{:.2f}".format(100 * d_cnt / lines[k]))
-
-
 def d_val(d, key):
     if key in d:
         return d[key]
@@ -104,6 +74,8 @@ def analyze_csv(f):
         lines = dict()
         lengths = dict()
 
+        engs = dict()
+
         for row in reader:
             user = row['user']
             body = row['body'].lower()
@@ -118,18 +90,24 @@ def analyze_csv(f):
                 lines[user] = 1
                 lengths[user] = len(body)
 
+            # Create user if new or increment lines if known
+            if user in engs:
+                engs[user].inc_comments()
+            else:
+                engs[user] = Engineer(user)
+
+            eng = engs[user]
+
             # check pos words
             for pos in positives:
                 if pos in body:
-                    # if user == 'vasilyMellanox':
-                    #     af.write("{x},{y}\n".format(x=user, y=body))
+                    eng.pos_found(body)
                     if user in pos_words.keys():
                         pos_words[user] += 1
                     else:
                         pos_words[user] = 1
             if customized_pos(body):
-                # if user == 'vasilyMellanox':
-                # af.write("{x},{y}\n".format(x=user, y=body))
+                eng.pos_found(body)
                 if user in pos_words.keys():
                     pos_words[user] += 1
                 else:
@@ -138,14 +116,13 @@ def analyze_csv(f):
             # check neg words
             for neg in negatives:
                 if neg in body:
-                    # print(user, body)
+                    eng.neg_found(body)
                     if user in neg_words.keys():
                         neg_words[user] += 1
                     else:
                         neg_words[user] = 1
             if customized_neg(body):
-                # print(user, body)
-                # af.write("{u},{b}\n".format(u=user, b=body))
+                eng.neg_found(body)
                 if user in neg_words.keys():
                     neg_words[user] += 1
                 else:
@@ -155,15 +132,10 @@ def analyze_csv(f):
         neg_d = dict()
         pos_d = dict()
         for u_id in lines.keys():
-            # if (lines[u_id] > 50) and (d_val(neg_words, u_id) > 0):
             if lines[u_id] > 50:
                 neg_d[u_id] = 100*d_val(neg_words, u_id)/lines[u_id]
-
-            # if (lines[u_id] > 50) and (d_val(pos_words, u_id) > 0):
-            if lines[u_id] > 50:
                 pos_d[u_id] = 100*d_val(pos_words, u_id)/lines[u_id]
 
-            # print(d_val(pos_d, u_id))
             pref = "{u},{c},{p_w},{p_p:.2f},{n_w},{n_p:.2f},{a_l}".format(u=u_id, c=lines[u_id],
                                                                           p_w=d_val(pos_words, u_id),
                                                                           p_p=d_val(pos_d, u_id),
@@ -179,8 +151,8 @@ def analyze_csv(f):
         print(header)
         af.write("{s}\n".format(s=header))
         i = 1
-        for eng in neg_l:
-            txt = "{id}) {u} - {n:.2f} ({l})".format(id=i, u=eng[0], n=eng[1], l=lines[eng[0]])
+        for neg in neg_l:
+            txt = "{id}) {u} - {n:.2f} ({l})".format(id=i, u=neg[0], n=neg[1], l=lines[neg[0]])
             print(txt)
             af.write("{s}\n".format(s=txt))
             i += 1
@@ -191,8 +163,8 @@ def analyze_csv(f):
         print(header)
         af.write("{s}\n".format(s=header))
         i = 1
-        for eng in pos_l:
-            txt = "{id}) {u} - {n:.2f} ({l})".format(id=i, u=eng[0], n=eng[1], l=lines[eng[0]])
+        for pos in pos_l:
+            txt = "{id}) {u} - {n:.2f} ({l})".format(id=i, u=pos[0], n=pos[1], l=lines[pos[0]])
             print(txt)
             af.write("{s}\n".format(s=txt))
             i += 1

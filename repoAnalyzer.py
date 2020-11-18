@@ -5,7 +5,6 @@ import json
 import os
 import requests
 import re
-from outputStats import print_str_usage_histogram
 from outputStats import analyze_csv
 from engineer import Engineer
 import time
@@ -143,13 +142,26 @@ def req_test(req_url):
 # retrieve_repo('intel', 'compute-runtime')
 # retrieve_repo('v3io', 'frames')
 #retrieve_repo('spdk', 'spdk')
-analyze_csv('intel_compute-runtime.csv')
+#analyze_csv('intel_compute-runtime.csv')
 #analyze_csv('v3io_frames.csv')
-analyze_csv('openucx_ucx.csv')
+#analyze_csv('openucx_ucx.csv')
 #analyze_csv('Mellanox_spdk.csv')
-# analyze_csv('Mellanox.csv')
-analyze_csv('linux-rdma_rdma-core.csv')
+analyze_csv('Mellanox.csv')
+#analyze_csv('linux-rdma_rdma-core.csv')
 
+l = []
+
+l.insert(0, Engineer('Shlomi'))
+
+e = l[0]
+e.inc_comments()
+e.inc_comments()
+e.inc_comments()
+e.pos_found("mmmm")
+
+z = l[0]
+
+#print("{s} with {x} and {y} {w}".format(s=z.username, x=z.pos_rate(), y=z.pos_cnt(), w=z.comments_cnt()))
 
 # if __name__ == "__main__":
 #    main()
