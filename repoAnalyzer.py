@@ -123,6 +123,37 @@ def req_test(req_url):
     # print(cnt)
     print(r.json())
 
+# 'Accept': 'text/csv',
+
+
+def watson_test():
+    headers = {
+        'Content-Type': 'text/plain;charset=utf-8',
+        'Accept': 'application/json',
+    }
+
+    # params = (
+    #     ('version', '2017-10-13'),
+    # )
+
+    params = (
+        ('version', '2017-10-13'),
+        ('consumption_preferences', 'true'),
+        ('raw_scores', 'true'),
+    )
+
+    data = open('jgunthorpe_comments.txt', 'rb').read()
+    response = requests.post('https://api.eu-gb.personality-insights.watson.cloud.ibm.com/instances/1053e341-43be-4f0c-a0c5-a12e251a182c/v3/profile', headers=headers, params=params, data=data, auth=('apikey', 'MauyFCwIWSYKbJ5ynsvxBGRuPl0prAgA2aV091GTRhpI'))
+    my_data = response.json()
+    print(response)
+    with open('jason_raw.json', 'w') as f:
+        json.dump(my_data, f)
+
+    #NB. Original query string below. It seems impossible to parse and
+    #reproduce query strings 100% accurately so the one below is given
+    #in case the reproduced version is not "correct".
+    # response = requests.post('https://api.eu-gb.personality-insights.watson.cloud.ibm.com/instances/1053e341-43be-4f0c-a0c5-a12e251a182c/v3/profile?version=2017-10-13', headers=headers, data=data, auth=('apikey', 'MauyFCwIWSYKbJ5ynsvxBGRuPl0prAgA2aV091GTRhpI'))
+
 
 # def main():
 # fname = "{own}_{rep}.json".format(rep=repo, own=owner)
@@ -137,16 +168,20 @@ def req_test(req_url):
 #retrieve_repo('spdk', 'spdk')
 #analyze_csv('intel_compute-runtime.csv')
 #analyze_csv('v3io_frames.csv')
-d = analyze_csv('openucx_ucx.csv')
+#d = analyze_csv('openucx_ucx.csv')
 #analyze_csv('Mellanox_spdk.csv')
 #d = analyze_csv('Mellanox.csv')
-# d = analyze_csv('linux-rdma_rdma-core.csv')
+#d = analyze_csv('linux-rdma_rdma-core.csv')
 
-print('\nq to quit, h for help')
-cmd = input('>>> ')
-while cmd != 'q':
-    handle_query(d, cmd)
-    cmd = input('>>> ')
+
+watson_test()
+
+
+#print('\nq to quit, h for help')
+#cmd = input('>>> ')
+#while cmd != 'q':
+#    handle_query(d, cmd)
+#    cmd = input('>>> ')
 
 # if __name__ == "__main__":
 #    main()

@@ -70,6 +70,9 @@ def customized_neg(txt):
 def analyze_csv(f):
     newf = 'analysis_for_'+ f
     af = open(newf, "w")
+    user_to_check = 'jgunthorpe'
+    user_fname = "{u}_comments.txt".format(u=user_to_check)
+    userf = open(user_fname, "w")
     with open(f, newline='') as csvfile:
         positives = ['tnx', 'thank', '10x', 'right?', 'right ?', 'imo', 'imho', 'i think', 'maybe',
                      'consider', 'you are right', 'you\'re right', ' correct ', ':)', ';)', 'nice catch', 'afaik',
@@ -88,9 +91,14 @@ def analyze_csv(f):
 
         engs = dict()
 
+
         for row in reader:
             user = row['user']
             body = row['body'].lower()
+
+            if user_to_check in user and "bot:retest" not in body:
+                userf.write(body + '\n')
+
             if ('jenkins' in user) or ('github' in user) or ('mlx3im' in user):
                 continue
 
@@ -149,5 +157,6 @@ def analyze_csv(f):
                 i += 1
 
     af.close()
+    userf.close()
 
     return engs
